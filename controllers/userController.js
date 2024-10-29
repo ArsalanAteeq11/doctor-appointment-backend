@@ -210,3 +210,38 @@ export const getUserById = async (req, res) => {
     console.log(error);
   }
 };
+
+export const editProfile = async (req,res) =>{
+  try {
+    const userId = req.body.userId
+    console.log(userId)
+    const {specialty,education, addressLine1,addressLine2,experience,fees,about,gender,dob,phone,language} = req.body
+    const image_filename = `${req.file.filename}`
+
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.json({success:false,message:"User not found"})
+    }
+
+    if (user.role === "doctor") {
+      user.specialty= specialty;
+      user.education=education;
+      user.experience=experience;
+      user.fees=fees;
+      user.about=about
+    }
+    user.address.addressLine1=addressLine1;
+    user.address.addressLine2=addressLine2;
+    user.gender=gender;
+    user.dob=dob;
+    user.phone=phone;
+    user.language=language;
+    user.profilePhoto=image_filename
+    
+    await user.save()
+
+    res.json({success:true,message:"Profile edit successfully.",user})
+  } catch (error) {
+    console.log(error)
+  }
+}

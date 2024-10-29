@@ -14,6 +14,7 @@ app.use(cors());
 connectdb();
 
 app.use("/user", userRouter);
+app.use("/images",express.static("uploads"))
 app.use("/appointment",appointment)
 app.listen(PORT, () => {
   console.log(`server is listening on ${PORT}`);
