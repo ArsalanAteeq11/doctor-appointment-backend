@@ -8,6 +8,7 @@ import {
   register,
   verifyOTP,
 } from "../controllers/userController.js";
+import { authenticateUser } from "../middlewares/auth.js";
 
 const router = express.Router();
 

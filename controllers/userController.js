@@ -59,7 +59,7 @@ export const register = async (req, res) => {
       otp: otp,
       otpExpires: Date.now() + 15 * 60 * 1000, // OTP expires in 15 minutes
     });
-    await newUser.save();
+    const user = await newUser.save();
 
     // Send OTP via email
     const mailOptions = {
@@ -71,8 +71,11 @@ export const register = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
+    const token = createToken(user._id);
+
     res.json({
       message: "OTP sent to your email. Please verify your account.",
+      token,
       success: true,
     });
   } catch (error) {
@@ -84,18 +87,18 @@ export const register = async (req, res) => {
 // OTP Verification
 export const verifyOTP = async (req, res) => {
   try {
-    const { email, otp } = req.body;
-    if (!email || !otp) {
+    const { otp } = req.body;
+    console.log(otp)
+    if (!otp) {
       return res.json({ message: "All fields are required", success: false });
     }
 
     // Find user by email and check if OTP matches and is not expired
     const user = await User.findOne({
-      email,
       otp,
       otpExpires: { $gt: Date.now() }, // Check if OTP has not expired
     });
-
+    console.log(user)
     if (!user) {
       return res.json({ message: "Invalid or expired OTP", success: false });
     }
@@ -106,12 +109,13 @@ export const verifyOTP = async (req, res) => {
     user.otpExpires = undefined; // Clear expiration
     await user.save();
 
-    const token = createToken(user._id);
+    
 
     res.json({
+      user,
       message: "Account verified successfully!",
       success: true,
-      token,
+      
     });
   } catch (error) {
     console.log(error);
@@ -147,10 +151,11 @@ export const login = async (req, res) => {
 
     // Generate and return JWT token
     const token = createToken(user._id);
-    return res.json({
+     res.json({
+      user,
       success: true,
       token,
-      message: `${user.username} logged in successfully!`,
+      message: "User logged in Successfully.",
     });
   } catch (error) {
     console.log(error);
