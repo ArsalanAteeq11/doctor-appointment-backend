@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
   dob: { type: Date }, // Date of birth field
   phone: { type: String }, // Phone number field
   language:{type:String},
+  age:{type:Number},
 
   otp: { type: String }, // Store the OTP
   otpExpires: { type: Date }, // Store when the OTP expires

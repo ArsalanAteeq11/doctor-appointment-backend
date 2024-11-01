@@ -1,4 +1,5 @@
 import { Appointment } from "../models/appointmentSchema.js";
+import { User } from "../models/userSchema.js";
 
 export const bookAppointment = async (req, res) => {
     try {
@@ -109,39 +110,68 @@ export const approveAppointment = async (req, res) => {
   };
 
   // Assume you have middleware to extract the logged-in user's ID and role from their session or JWT
-export const getDoctorAppointments = async (req, res) => {
-    const { id} = req.params ; // Assuming req.user contains user info
+// export const getDoctorAppointments = async (req, res) => {
+//     const { id} = req.params ; // Assuming req.user contains user info
     
-    try {
-      const appointments = await Appointment.find({doctor:id})
-     console.log(appointments)
+//     try {
+//       const appointments = await Appointment.find({doctor:id})
+//      console.log(appointments)
       
-      if (!appointments) {
-        return res.status(404).json({ success: false, message: 'No appointments found' });
-      }
+//       if (!appointments) {
+//         return res.status(404).json({ success: false, message: 'No appointments found' });
+//       }
   
-      return res.status(200).json({ success: true, appointments });
-    } catch (error) {
-      console.error("Error fetching appointments", error);
-      return res.status(500).json({ success: false, message: 'Server error' });
-    }
-  };
+//       return res.status(200).json({ success: true, appointments });
+//     } catch (error) {
+//       console.error("Error fetching appointments", error);
+//       return res.status(500).json({ success: false, message: 'Server error' });
+//     }
+//   };
   
-export const getPatientAppointments = async (req, res) => {
-    const { id} = req.params ;  // Assuming req.user contains user info
+// export const getPatientAppointments = async (req, res) => {
+//     const { id} = req.params ;  // Assuming req.user contains user info
     
-    try {
-      const appointments = await Appointment.find({patientId:id})
+//     try {
+//       const appointments = await Appointment.find({patientId:id})
   
       
-      if (!appointments) {
-        return res.status(404).json({ success: false, message: 'No appointments found' });
-      }
+//       if (!appointments) {
+//         return res.status(404).json({ success: false, message: 'No appointments found' });
+//       }
   
-      return res.status(200).json({ success: true, appointments });
-    } catch (error) {
-      console.error("Error fetching appointments", error);
-      return res.status(500).json({ success: false, message: 'Server error' });
+//       return res.status(200).json({ success: true, appointments });
+//     } catch (error) {
+//       console.error("Error fetching appointments", error);
+//       return res.status(500).json({ success: false, message: 'Server error' });
+//     }
+//   };
+  
+// Assume you have middleware to extract the logged-in user's ID and role from their session or JWT
+export const getAppointments = async (req, res) => {
+  const userId = req.body.userId 
+
+  const user = await User.findById(userId)
+  
+  try {
+    let appointments;
+
+    if (user?.role === 'doctor') {
+      // If the logged-in user is a doctor, find appointments where they are the doctor
+      appointments = await Appointment.find({ doctor: userId })
+      .populate('patient')  ;
+    } else if (user?.role === 'patient') {
+      // If the logged-in user is a patient, find appointments where they are the patient
+      appointments = await Appointment.find({ patient: userId })
+      .populate('doctor')  ;
     }
-  };
-  
+
+    if (!appointments) {
+      return res.status(404).json({ success: false, message: 'No appointments found' });
+    }
+
+    return res.status(200).json({ success: true, appointments });
+  } catch (error) {
+    console.error("Error fetching appointments", error);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

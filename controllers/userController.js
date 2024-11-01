@@ -215,7 +215,7 @@ export const editProfile = async (req,res) =>{
   try {
     const userId = req.body.userId
     console.log(userId)
-    const {specialty,education, addressLine1,addressLine2,experience,fees,about,gender,dob,phone,language} = req.body
+    const {specialty,education, addressLine1,addressLine2,experience,fees,about,gender,age,dob,phone,language} = req.body
     const image_filename = `${req.file.filename}`
 
     const user = await User.findById(userId)
@@ -236,6 +236,7 @@ export const editProfile = async (req,res) =>{
     user.dob=dob;
     user.phone=phone;
     user.language=language;
+    user.age=age;
     user.profilePhoto=image_filename
     
     await user.save()
