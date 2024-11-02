@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  deleteUser,
   editProfile,
   getAllDoctors,
   getAllPatients,
@@ -31,5 +32,6 @@ router.get("/allusers", getAllUsers);
 router.get("/alldoctors", getAllDoctors);
 router.get("/allpatients", getAllPatients);
 router.get("/getuser/:id", getUserById);
+router.delete("/delete/:id",deleteUser)
 
 export default router;
