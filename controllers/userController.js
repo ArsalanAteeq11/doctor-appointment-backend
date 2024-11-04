@@ -214,14 +214,13 @@ export const getUserById = async (req, res) => {
 export const editProfile = async (req,res) =>{
   try {
     const userId = req.body.userId
-    console.log(userId)
-    const {specialty,education, addressLine1,addressLine2,experience,fees,about,gender,age,dob,phone,language} = req.body
-    const image_filename = `${req.file.filename}`
-
+    const {name,specialty,education, addressLine1,addressLine2,experience,fees,about,gender,age,dob,phone,language} = req.body
+    
     const user = await User.findById(userId)
     if (!user) {
       return res.json({success:false,message:"User not found"})
     }
+    const image_filename = req.file ? req.file.filename : user.profilePhoto;
 
     if (user.role === "doctor") {
       user.specialty= specialty;
@@ -230,6 +229,7 @@ export const editProfile = async (req,res) =>{
       user.fees=fees;
       user.about=about
     }
+    user.username=name;
     user.address.addressLine1=addressLine1;
     user.address.addressLine2=addressLine2;
     user.gender=gender;
