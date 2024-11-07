@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { User } from "../models/userSchema.js";
+import { Appointment } from "../models/appointmentSchema.js";
 dotenv.config();
 
 // Generate a JWT Token
@@ -215,11 +216,17 @@ export const editProfile = async (req,res) =>{
   try {
     const userId = req.body.userId
     const {name,specialty,education, addressLine1,addressLine2,experience,fees,about,gender,age,dob,phone,language} = req.body
-    
+    if (!name) {
+      return res.status(400).json({ success: false, message: "Name is required." });
+    }
     const user = await User.findById(userId)
     if (!user) {
       return res.json({success:false,message:"User not found"})
     }
+    if (user.role === "doctor" && !specialty) {
+      return res.status(400).json({ success: false, message: "Specialty is required for doctors." });
+    }
+
     const image_filename = req.file ? req.file.filename : user.profilePhoto;
 
     if (user.role === "doctor") {
@@ -247,17 +254,45 @@ export const editProfile = async (req,res) =>{
   }
 }
 
-export const deleteUser = async (req,res) =>{
-  try {
-    const {id} = req.params
-    const user = await User.findByIdAndDelete(id)
-    if (!user) {
-      return res.json({success:false,message:"User not found"})
 
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const today = new Date();
+    const todayDate = today.getDate();
+    const todayMonth = today.toLocaleString('default', { month: 'short' });
+    const todayYear = today.getFullYear();
+
+    // Fetch active or future appointments
+    const activeAppointments = await Appointment.find({
+      doctor: id,
+      status: "approved",
+      $or: [
+        { "createdAt": { $gte: new Date(todayYear, today.getMonth(), todayDate) } }, // Only year is evaluated
+        {
+          date: { $gte: todayDate },
+          month: todayMonth,
+          createdAt: { $gte: new Date(todayYear, 0, 1) }, // Keeps only the year portion
+        },
+      ],
+    });
+
+    if (activeAppointments.length > 0) {
+      return res.json({
+        success: false,
+        message: "Doctor cannot be deleted as they have active or future appointments.",
+      });
     }
-    res.json({success:true, message:"User deleted Successfully"})
-  
+
+    // Proceed with deletion if no active appointments
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, message: "User deleted successfully" });
   } catch (error) {
-    console.log(error)
+    console.log(error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
-}
+};

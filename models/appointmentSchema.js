@@ -11,7 +11,7 @@ const appointmentSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  day: {
+  month: {
     type: String,
     required: true,
   },
